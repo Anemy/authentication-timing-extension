@@ -12,12 +12,23 @@ function formatTime(ms) {
     return `${minutes}m ${remainingSeconds}s`;
 }
 
+// Format date to a readable string
+function formatDate(timestamp) {
+    const date = new Date(timestamp);
+    return date.toLocaleDateString(undefined, {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+    });
+}
+
 // Update the UI with current stats
 function updateStats() {
     chrome.runtime.sendMessage({ action: 'getStats' }, (response) => {
         document.getElementById('totalTime').textContent = formatTime(response.totalTime);
-        document.getElementById('averageTime').textContent = formatTime(response.averageTime);
+        document.getElementById('perDay').textContent = formatTime(response.perDay);
         document.getElementById('sessionCount').textContent = response.sessionCount;
+        document.getElementById('startDate').textContent = formatDate(response.startDate);
     });
 }
 

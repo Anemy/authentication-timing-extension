@@ -1,4 +1,3 @@
-
 // Helper function to detect SSO pages
 function isSSOPage(url) {
     const ssoKeywords = [
@@ -20,13 +19,13 @@ function isOutlierTime(time) {
     return time > 15_000; // 15 seconds.
 }
 
-
 // Initialize storage with default values
 chrome.runtime.onInstalled.addListener(() => {
     chrome.storage.local.set({
         totalTime: 0,
         sessionCount: 0,
-        currentSessionStart: null
+        currentSessionStart: null,
+        startDate: Date.now()
     });
 });
 
@@ -63,11 +62,16 @@ chrome.webNavigation.onCompleted.addListener((details) => {
 // Listen for messages from popup
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === 'getStats') {
-        chrome.storage.local.get(['totalTime', 'sessionCount'], (data) => {
+        chrome.storage.local.get(['totalTime', 'sessionCount', 'startDate'], (data) => {
+            const startDate = data.startDate || Date.now();
+            const daysElapsed = Math.max(1, Math.floor((Date.now() - startDate) / (1000 * 60 * 60 * 24)));
+            const perDay = Math.round(data.totalTime / daysElapsed);
+
             sendResponse({
                 totalTime: data.totalTime || 0,
                 sessionCount: data.sessionCount || 0,
-                averageTime: data.sessionCount ? Math.round(data.totalTime / data.sessionCount) : 0
+                perDay: perDay,
+                startDate: startDate
             });
         });
         return true; // Will respond asynchronously
@@ -77,7 +81,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         chrome.storage.local.set({
             totalTime: 0,
             sessionCount: 0,
-            currentSessionStart: null
+            currentSessionStart: null,
+            startDate: Date.now()
         });
         sendResponse({ success: true });
     }
