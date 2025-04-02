@@ -25,6 +25,7 @@ chrome.runtime.onInstalled.addListener(() => {
         totalTime: 0,
         sessionCount: 0,
         currentSessionStart: null,
+        currentInitialRequestStart: null,
         startDate: Date.now()
     });
 });
@@ -33,26 +34,37 @@ chrome.runtime.onInstalled.addListener(() => {
 chrome.webNavigation.onBeforeNavigate.addListener((details) => {
     // Check if this is a potential SSO page
     if (isSSOPage(details.url)) {
-        chrome.storage.local.set({ currentSessionStart: Date.now() });
+        // When we detect an SSO page, start timing from now
+        chrome.storage.local.set({ 
+            currentSessionStart: Date.now(),
+            currentInitialRequestStart: Date.now() // Start both timers at the same time
+        });
     }
 });
 
 chrome.webNavigation.onCompleted.addListener((details) => {
     if (isSSOPage(details.url)) {
-        chrome.storage.local.get(['currentSessionStart', 'totalTime', 'sessionCount'], (data) => {
+        chrome.storage.local.get(['currentSessionStart', 'currentInitialRequestStart', 'totalTime', 'sessionCount'], (data) => {
             if (data.currentSessionStart) {
-                const sessionTime = Date.now() - data.currentSessionStart;
-                const newTotalTime = data.totalTime + sessionTime;
-                const newSessionCount = data.sessionCount + 1;
+                const totalAuthTime = Date.now() - data.currentSessionStart;
 
-                if (isOutlierTime(sessionTime)) {
+                if (isOutlierTime(totalAuthTime)) {
+                    // Clear the timing data
+                    chrome.storage.local.set({
+                        currentSessionStart: null,
+                        currentInitialRequestStart: null
+                    });
                     return;
                 }
+
+                const newTotalTime = data.totalTime + totalAuthTime;
+                const newSessionCount = data.sessionCount + 1;
 
                 chrome.storage.local.set({
                     totalTime: newTotalTime,
                     sessionCount: newSessionCount,
-                    currentSessionStart: null
+                    currentSessionStart: null,
+                    currentInitialRequestStart: null
                 });
             }
         });
@@ -82,6 +94,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             totalTime: 0,
             sessionCount: 0,
             currentSessionStart: null,
+            currentInitialRequestStart: null,
             startDate: Date.now()
         });
         sendResponse({ success: true });

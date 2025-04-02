@@ -60,7 +60,7 @@
         <div class="header">SSO Timing Tracker</div>
         <div class="stats">
             <div class="stat-item">
-                <span class="label">Total SSO Time:</span>
+                <span class="label">Total Auth Time:</span>
                 <span class="value" id="totalTime">0s</span>
             </div>
             <div class="stat-item">
@@ -68,7 +68,7 @@
                 <span class="value" id="perDay">0s</span>
             </div>
             <div class="stat-item">
-                <span class="label">SSO Sessions:</span>
+                <span class="label">Auth Sessions:</span>
                 <span class="value" id="sessionCount">0</span>
             </div>
             <div class="stat-item">
@@ -77,11 +77,9 @@
             </div>
         </div>
         <div class="description">
-            This extension tracks the time spent on SSO authentication pages.
+            This extension tracks the total time spent on authentication, including both the initial request and SSO page time.
             <br>
-            It ignores outliers (over 15 seconds). It only tracks the time spent on SSO pages.
-            <br>
-            It does not track the time spent loading the original page and being redirected.
+            It ignores outliers (over 15 seconds).
         </div>
         <button class="reset-btn" id="resetBtn">Reset Stats</button>
     </div>
